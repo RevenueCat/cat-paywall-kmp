@@ -1,12 +1,12 @@
 import SwiftUI
-import RevenueCat
+import ComposeApp
 
 @main
 struct iosAppApp: App {
 
     init() {
-        Purchases.logLevel = .debug
-        Purchases.configure(withAPIKey: "your_ios_api_key_here")
+        // RevenueCat ships inside the ComposeApp framework, so it is configured through Kotlin.
+        ConfigurePurchasesKt.configurePurchases(apiKey: "your_ios_api_key_here")
     }
 
     var body: some Scene {
