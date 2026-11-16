@@ -4,10 +4,6 @@ plugins {
   alias(libs.plugins.metro)
 }
 
-android {
-  namespace = "com.revenuecat.catpaywalls.core.network"
-}
-
 kotlin {
   sourceSets {
     commonMain.dependencies {

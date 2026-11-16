@@ -47,3 +47,4 @@ include(":feature:bookmarks")
 
 // App modules
 include(":composeApp")
+include(":androidApp")

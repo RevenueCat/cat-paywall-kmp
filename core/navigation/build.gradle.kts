@@ -3,10 +3,6 @@ plugins {
   alias(libs.plugins.kotlin.serialization)
 }
 
-android {
-  namespace = "com.revenuecat.catpaywalls.core.navigation"
-}
-
 kotlin {
   sourceSets {
     commonMain.dependencies {

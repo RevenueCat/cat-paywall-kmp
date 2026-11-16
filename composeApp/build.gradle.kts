@@ -1,10 +1,9 @@
-import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import java.util.Properties
 
+// Shared KMP library: Android consumes it from :androidApp, iOS consumes the ComposeApp framework via CocoaPods.
 plugins {
   alias(libs.plugins.kotlin.multiplatform)
-  alias(libs.plugins.android.application)
+  alias(libs.plugins.android.kotlin.multiplatform.library)
   alias(libs.plugins.compose.multiplatform)
   alias(libs.plugins.compose.compiler)
   alias(libs.plugins.kotlin.serialization)
@@ -13,15 +12,19 @@ plugins {
 }
 
 kotlin {
-  androidTarget {
-    @OptIn(ExperimentalKotlinGradlePluginApi::class)
+  android {
+    namespace = "com.revenuecat.catpaywalls.composeapp"
+    compileSdk = libs.versions.android.compileSdk.get().toInt()
+    minSdk = libs.versions.android.minSdk.get().toInt()
+
     compilerOptions {
       jvmTarget.set(JvmTarget.JVM_11)
     }
   }
 
+  // No iosX64(): Compose Multiplatform 1.11+ and the AndroidX KMP libraries no longer publish Apple x86_64
+  // variants (deprecated in Kotlin, KT-81596), so Intel simulators cannot be targeted anymore.
   listOf(
-    iosX64(),
     iosArm64(),
     iosSimulatorArm64(),
   ).forEach { iosTarget ->
@@ -41,14 +44,8 @@ kotlin {
       baseName = "ComposeApp"
       isStatic = true
     }
-    pod("RevenueCat") {
-      version = "~> 5.71"
-      extraOpts += listOf("-compiler-option", "-fmodules")
-    }
-    pod("RevenueCatUI") {
-      version = "~> 5.71"
-      extraOpts += listOf("-compiler-option", "-fmodules")
-    }
+    // No RevenueCat pods: purchases-kmp bundles purchases-ios into this framework, so adding them would ship
+    // duplicate RevenueCat classes. Purchases is configured from Kotlin (iosMain/ConfigurePurchases.kt).
   }
 
   sourceSets {
@@ -69,11 +66,11 @@ kotlin {
       implementation(projects.feature.bookmarks)
 
       // Compose
-      implementation(compose.runtime)
-      implementation(compose.foundation)
-      implementation(compose.material3)
-      implementation(compose.ui)
-      implementation(compose.components.resources)
+      implementation(libs.compose.runtime)
+      implementation(libs.compose.foundation)
+      implementation(libs.compose.material3)
+      implementation(libs.compose.ui)
+      implementation(libs.compose.components.resources)
 
       // Navigation
       implementation(libs.navigation.compose)
@@ -98,54 +95,12 @@ kotlin {
     }
 
     androidMain.dependencies {
-      implementation(libs.androidx.activity.compose)
       implementation(libs.kotlinx.coroutines.android)
       implementation(libs.ktor.client.okhttp)
     }
 
     iosMain.dependencies {
       implementation(libs.ktor.client.darwin)
-    }
-  }
-}
-
-val localProperties = Properties().apply {
-  val file = rootProject.file("local.properties")
-  if (file.exists()) file.inputStream().use { load(it) }
-}
-
-android {
-  namespace = "com.revenuecat.catpaywalls"
-  compileSdk = libs.versions.android.compileSdk.get().toInt()
-
-  defaultConfig {
-    applicationId = "com.revenuecat.catpaywalls"
-    minSdk = libs.versions.android.minSdk.get().toInt()
-    targetSdk = libs.versions.android.targetSdk.get().toInt()
-    versionCode = 1
-    versionName = "1.0"
-
-    // RevenueCat Test Store API key (loaded from local.properties)
-    buildConfigField(
-      "String",
-      "REVENUECAT_TEST_API_KEY",
-      "\"${localProperties.getProperty("revenuecat.test.api.key", "")}\"",
-    )
-  }
-
-  buildFeatures {
-    compose = true
-    buildConfig = true
-  }
-
-  compileOptions {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
-  }
-
-  packaging {
-    resources {
-      excludes += "/META-INF/{AL2.0,LGPL2.1}"
     }
   }
 }

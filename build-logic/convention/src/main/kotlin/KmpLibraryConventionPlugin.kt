@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import com.android.build.gradle.LibraryExtension
-import org.gradle.api.JavaVersion
+import com.android.build.api.dsl.KotlinMultiplatformAndroidLibraryTarget
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
 class KmpLibraryConventionPlugin : Plugin<Project> {
@@ -25,22 +25,29 @@ class KmpLibraryConventionPlugin : Plugin<Project> {
     with(target) {
       with(pluginManager) {
         apply("org.jetbrains.kotlin.multiplatform")
-        apply("com.android.library")
+        apply("com.android.kotlin.multiplatform.library")
       }
 
       extensions.configure<KotlinMultiplatformExtension> {
-        androidTarget {
-          compilations.all {
-            compileTaskProvider.configure {
-              compilerOptions {
-                jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
-              }
-            }
+        extensions.configure<KotlinMultiplatformAndroidLibraryTarget>("android") {
+          // Derived from the project path so each module keeps the namespace it declared before AGP 9,
+          // e.g. :core:data -> com.revenuecat.catpaywalls.core.data
+          namespace = "com.revenuecat.catpaywalls${project.path.replace(':', '.')}"
+          compileSdk = libs.findVersion("android-compileSdk").get().toString().toInt()
+          minSdk = libs.findVersion("android-minSdk").get().toString().toInt()
+
+          compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_11)
           }
+
+          // Host tests are opt-in with the KMP library plugin. Without this, commonTest would no longer run
+          // on the JVM (testAndroidHostTest), silently dropping the unit tests that testDebugUnitTest ran.
+          withHostTest {}
         }
 
+        // No iosX64(): Compose Multiplatform 1.11+ and the AndroidX KMP libraries no longer publish Apple x86_64
+        // variants (deprecated in Kotlin, KT-81596), so Intel simulators cannot be targeted anymore.
         listOf(
-          iosX64(),
           iosArm64(),
           iosSimulatorArm64(),
         ).forEach { iosTarget ->
@@ -60,36 +67,6 @@ class KmpLibraryConventionPlugin : Plugin<Project> {
             implementation(libs.findLibrary("kotlinx-coroutines-test").get())
             implementation(libs.findLibrary("turbine").get())
           }
-        }
-      }
-
-      extensions.configure<LibraryExtension> {
-        val catalog =
-          extensions
-            .getByType(
-              org.gradle.api.artifacts.VersionCatalogsExtension::class.java,
-            ).named("libs")
-
-        namespace = "com.revenuecat.catpaywalls.${project.name.replace("-", ".")}"
-        compileSdk =
-          catalog
-            .findVersion("android-compileSdk")
-            .get()
-            .toString()
-            .toInt()
-
-        defaultConfig {
-          minSdk =
-            catalog
-              .findVersion("android-minSdk")
-              .get()
-              .toString()
-              .toInt()
-        }
-
-        compileOptions {
-          sourceCompatibility = JavaVersion.VERSION_11
-          targetCompatibility = JavaVersion.VERSION_11
         }
       }
     }

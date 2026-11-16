@@ -3,10 +3,7 @@ platform :ios, '15.0'
 target 'iosApp' do
   use_frameworks!
 
-  pod 'RevenueCat', '~> 5.71'
-  pod 'RevenueCatUI', '~> 5.71'
-
-  # KMP framework from Gradle
+  # KMP framework from Gradle. It already bundles RevenueCat, so do not add RevenueCat pods here.
   pod 'composeApp', :path => '../composeApp'
 end
 
@@ -14,6 +11,9 @@ post_install do |installer|
   installer.pods_project.targets.each do |target|
     target.build_configurations.each do |config|
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
+      # The ComposeApp framework has no x86_64 simulator slice: Compose Multiplatform 1.11+ dropped Apple x86_64
+      # targets. Without this, generic simulator builds ask Gradle for x86_64 and fail.
+      config.build_settings['EXCLUDED_ARCHS[sdk=iphonesimulator*]'] = 'x86_64'
     end
   end
 end

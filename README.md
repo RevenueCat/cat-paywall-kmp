@@ -3,8 +3,8 @@
 <p align="center">
   <a href="https://opensource.org/licenses/Apache-2.0"><img alt="License" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"/></a>
   <a href="https://android-arsenal.com/api?level=24"><img alt="API" src="https://img.shields.io/badge/API-24%2B-brightgreen.svg?style=flat"/></a>
-  <a href="https://kotlinlang.org"><img alt="Kotlin" src="https://img.shields.io/badge/Kotlin-2.3.0-purple.svg?style=flat"/></a>
-  <a href="https://www.jetbrains.com/lp/compose-multiplatform/"><img alt="Compose Multiplatform" src="https://img.shields.io/badge/Compose%20Multiplatform-1.9.0-blue.svg?style=flat"/></a>
+  <a href="https://kotlinlang.org"><img alt="Kotlin" src="https://img.shields.io/badge/Kotlin-2.4.21-purple.svg?style=flat"/></a>
+  <a href="https://www.jetbrains.com/lp/compose-multiplatform/"><img alt="Compose Multiplatform" src="https://img.shields.io/badge/Compose%20Multiplatform-1.12.2-blue.svg?style=flat"/></a>
   <a href="https://github.com/RevenueCat/cat-paywalls-kmp/actions/workflows/build.yml"><img alt="Build" src="https://github.com/RevenueCat/cat-paywalls-kmp/actions/workflows/build.yml/badge.svg"/></a>
 </p>
 
@@ -74,9 +74,9 @@ You can build this project with the few steps below:
 
 1. Configure your RevenueCat dashboard following [RevenueCat Google Play Integration codelab](https://revenuecat.github.io/codelabs/google-play.html#0), and [RevenueCat App Store Integration codelab](https://revenuecat.github.io/codelabs/app-store/index.html).
 2. In RevenueCat dashboard, go to the "API Keys" menu on the left side, and copy the SDK API keys for Play Store and App Store.
-3. Put your Play Store API key to the [Application class](https://github.com/revenuecat/cat-paywalls-kmp/blob/main/composeApp/src/androidMain/kotlin/com/revenuecat/catpaywalls/CatArticlesApplication.kt#L36) for Android, and [iosApp](https://github.com/revenuecat/cat-paywalls-kmp/blob/main/iosApp/iosApp/iosAppApp.swift#L9) for iOS.
-4. Replace the [applicationId](https://github.com/revenuecat/cat-paywalls-kmp/blob/main/composeApp/build.gradle.kts#L113) for your Google Play package name, configured on your ReveneuCat dasboard. For iOS, change the [product bundle id](https://github.com/revenuecat/cat-paywalls-kmp/blob/main/iosApp/iosApp.xcodeproj/project.pbxproj#L368) and [here](https://github.com/advocacies/cat-paywalls-kmp/blob/main/iosApp/iosApp.xcodeproj/project.pbxproj#L391) with your App Bundle ID.
-5. Run the project.
+3. Put your Play Store API key to the [Application class](https://github.com/revenuecat/cat-paywalls-kmp/blob/main/androidApp/src/main/kotlin/com/revenuecat/catpaywalls/CatArticlesApplication.kt#L50) for Android, and [iosApp](https://github.com/revenuecat/cat-paywalls-kmp/blob/main/iosApp/iosApp/iosAppApp.swift#L9) for iOS.
+4. Replace the [applicationId](https://github.com/revenuecat/cat-paywalls-kmp/blob/main/androidApp/build.gradle.kts#L22) for your Google Play package name, configured on your ReveneuCat dasboard. For iOS, change the [product bundle id](https://github.com/revenuecat/cat-paywalls-kmp/blob/main/iosApp/iosApp.xcodeproj/project.pbxproj#L351) and [here](https://github.com/advocacies/cat-paywalls-kmp/blob/main/iosApp/iosApp.xcodeproj/project.pbxproj#L375) with your App Bundle ID.
+5. Run the `androidApp` run configuration for Android, or open `iosApp/iosApp.xcworkspace` in Xcode for iOS.
 
 ## 🛠 Tech Stack & Open Source Libraries
 
@@ -94,11 +94,11 @@ You can build this project with the few steps below:
 This project follows [Google's official architecture guidance](https://developer.android.com/topic/architecture) with a multi-module structure adapted for Kotlin Multiplatform.
 
 The project is organized into three main layers:
-- **composeApp**: The main application module containing platform entry points (`androidMain`, `iosMain`) and shared app code (`commonMain`).
+- **androidApp** and **composeApp**: `androidApp` is the Android application module (entry points, manifest, and launcher resources). `composeApp` is a Kotlin Multiplatform library containing the shared app code (`commonMain`) and the iOS entry point (`iosMain`), consumed by `androidApp` on Android and by `iosApp` as the `ComposeApp` framework.
 - **feature modules**: Individual feature screens like `home`, `article`, `paywalls`, `account`, and `subscriptions`.
 - **core modules**: Shared foundation including `model` (data classes), `network` (Ktor client), `data` (repositories), `designsystem` (theme & components), and `navigation` (routes).
 
-Each feature module depends on core modules, and the composeApp module brings everything together with platform-specific configurations.
+Each feature module depends on core modules, and the composeApp module brings everything together for the `androidApp` and `iosApp` entry points.
 
 ## 🤝 Contribution
 

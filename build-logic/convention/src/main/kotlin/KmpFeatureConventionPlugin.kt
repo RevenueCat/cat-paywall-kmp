@@ -16,8 +16,6 @@
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
-import org.gradle.kotlin.dsl.getByType
-import org.jetbrains.compose.ComposeExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
 class KmpFeatureConventionPlugin : Plugin<Project> {
@@ -33,7 +31,6 @@ class KmpFeatureConventionPlugin : Plugin<Project> {
         extensions
           .getByType(org.gradle.api.artifacts.VersionCatalogsExtension::class.java)
           .named("libs")
-      val compose = extensions.getByType<ComposeExtension>()
 
       extensions.configure<KotlinMultiplatformExtension> {
         sourceSets.apply {
@@ -45,10 +42,10 @@ class KmpFeatureConventionPlugin : Plugin<Project> {
             implementation(project(":core:data"))
 
             // Compose & Navigation
-            implementation(compose.dependencies.runtime)
-            implementation(compose.dependencies.foundation)
-            implementation(compose.dependencies.material3)
-            implementation(compose.dependencies.materialIconsExtended)
+            implementation(libs.findLibrary("compose-runtime").get())
+            implementation(libs.findLibrary("compose-foundation").get())
+            implementation(libs.findLibrary("compose-material3").get())
+            implementation(libs.findLibrary("compose-material-icons-extended").get())
 
             // Navigation
             implementation(libs.findLibrary("navigation-compose").get())
