@@ -27,6 +27,8 @@ data class Article(
   val author: String,
   val date: String,
   val cover: String,
+  // Only premium-only articles carry this key in the feed, so it must default to false when absent.
+  val premium: Boolean = false,
 ) {
   // Generate a stable id from title hashCode since API doesn't provide one
   val id: Long get() = title.hashCode().toLong()

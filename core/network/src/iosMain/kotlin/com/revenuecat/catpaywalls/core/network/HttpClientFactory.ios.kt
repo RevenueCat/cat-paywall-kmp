@@ -22,17 +22,11 @@ import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.http.ContentType
 import io.ktor.serialization.kotlinx.json.json
-import kotlinx.serialization.json.Json
 
 actual fun createHttpClient(): HttpClient = HttpClient(Darwin) {
   install(ContentNegotiation) {
     json(
-      json =
-      Json {
-        ignoreUnknownKeys = true
-        isLenient = true
-        prettyPrint = true
-      },
+      json = catArticlesJson,
       contentType = ContentType.Any,
     )
   }
