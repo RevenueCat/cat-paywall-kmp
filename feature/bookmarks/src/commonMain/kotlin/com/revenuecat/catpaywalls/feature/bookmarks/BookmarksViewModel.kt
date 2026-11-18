@@ -20,16 +20,22 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.revenuecat.catpaywalls.core.data.ArticlesRepository
 import com.revenuecat.catpaywalls.core.data.BookmarksRepository
+import com.revenuecat.catpaywalls.core.data.PaywallsRepository
 import com.revenuecat.catpaywalls.core.model.Article
+import com.revenuecat.purchases.kmp.models.CustomerInfo
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
 @Inject
-class BookmarksViewModel(articlesRepository: ArticlesRepository, bookmarksRepository: BookmarksRepository) :
-  ViewModel() {
+class BookmarksViewModel(
+  articlesRepository: ArticlesRepository,
+  bookmarksRepository: BookmarksRepository,
+  paywallsRepository: PaywallsRepository,
+) : ViewModel() {
 
   val uiState: StateFlow<BookmarksUiState> = combine(
     articlesRepository.fetchArticles(),
@@ -47,6 +53,14 @@ class BookmarksViewModel(articlesRepository: ArticlesRepository, bookmarksReposi
     started = SharingStarted.WhileSubscribed(5_000),
     initialValue = BookmarksUiState.Loading,
   )
+
+  val customerInfo: StateFlow<CustomerInfo?> = paywallsRepository.fetchCustomerInfo()
+    .map { it.getOrNull() }
+    .stateIn(
+      scope = viewModelScope,
+      started = SharingStarted.WhileSubscribed(5_000),
+      initialValue = null,
+    )
 }
 
 @Stable

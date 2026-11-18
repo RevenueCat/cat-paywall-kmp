@@ -16,5 +16,13 @@
 package com.revenuecat.catpaywalls.core.network
 
 import io.ktor.client.HttpClient
+import kotlinx.serialization.json.Json
 
 expect fun createHttpClient(): HttpClient
+
+// Shared by both platform clients so decoding tests run against the exact configuration the app uses.
+internal val catArticlesJson: Json = Json {
+  ignoreUnknownKeys = true
+  isLenient = true
+  prettyPrint = true
+}

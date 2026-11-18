@@ -49,8 +49,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.revenuecat.catpaywalls.core.designsystem.component.CatArticlesAppBar
+import com.revenuecat.catpaywalls.core.designsystem.component.PremiumPill
 import com.revenuecat.catpaywalls.core.designsystem.theme.CatArticlesTheme
 import com.revenuecat.catpaywalls.core.model.Article
+import com.revenuecat.catpaywalls.core.model.requiresPremiumPaywall
 import com.revenuecat.catpaywalls.core.navigation.CatArticlesScreen
 import com.revenuecat.catpaywalls.core.navigation.currentComposeNavigator
 import com.skydoves.landscapist.ImageOptions
@@ -59,10 +61,14 @@ import com.skydoves.landscapist.image.LandscapistImage
 import com.skydoves.landscapist.placeholder.shimmer.Shimmer
 import com.skydoves.landscapist.placeholder.shimmer.ShimmerPlugin
 
+private const val ENTITLEMENT_PREMIUM = "premium"
+
 @Composable
 fun BookmarksScreen(viewModel: BookmarksViewModel) {
   val navigator = currentComposeNavigator
   val uiState by viewModel.uiState.collectAsState()
+  val customerInfo by viewModel.customerInfo.collectAsState()
+  val isEntitled = customerInfo?.entitlements?.get(ENTITLEMENT_PREMIUM)?.isActive == true
 
   Column(modifier = Modifier.fillMaxSize()) {
     CatArticlesAppBar(
@@ -115,7 +121,15 @@ fun BookmarksScreen(viewModel: BookmarksViewModel) {
         items(state.articles, key = { it.title }) { article ->
           BookmarkArticleCard(
             article = article,
-            onClick = { navigator.navigate(CatArticlesScreen.CatArticle(articleId = article.id)) },
+            isEntitled = isEntitled,
+            onClick = {
+              // Only the premium part of the access rule: tapping a bookmark was never gated by the daily quota.
+              if (requiresPremiumPaywall(article, isEntitled)) {
+                navigator.navigate(CatArticlesScreen.Paywalls)
+              } else {
+                navigator.navigate(CatArticlesScreen.CatArticle(articleId = article.id))
+              }
+            },
           )
         }
       }
@@ -124,7 +138,7 @@ fun BookmarksScreen(viewModel: BookmarksViewModel) {
 }
 
 @Composable
-private fun BookmarkArticleCard(article: Article, onClick: () -> Unit) {
+private fun BookmarkArticleCard(article: Article, isEntitled: Boolean, onClick: () -> Unit) {
   Box(
     modifier = Modifier
       .padding(8.dp)
@@ -159,5 +173,14 @@ private fun BookmarkArticleCard(article: Article, onClick: () -> Unit) {
       fontSize = 14.sp,
       fontWeight = FontWeight.Bold,
     )
+
+    if (article.premium) {
+      PremiumPill(
+        isLocked = !isEntitled,
+        modifier = Modifier
+          .align(Alignment.TopStart)
+          .padding(12.dp),
+      )
+    }
   }
 }

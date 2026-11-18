@@ -78,6 +78,21 @@ You can build this project with the few steps below:
 4. Replace the [applicationId](https://github.com/revenuecat/cat-paywalls-kmp/blob/main/androidApp/build.gradle.kts#L22) for your Google Play package name, configured on your ReveneuCat dasboard. For iOS, change the [product bundle id](https://github.com/revenuecat/cat-paywalls-kmp/blob/main/iosApp/iosApp.xcodeproj/project.pbxproj#L351) and [here](https://github.com/advocacies/cat-paywalls-kmp/blob/main/iosApp/iosApp.xcodeproj/project.pbxproj#L375) with your App Bundle ID.
 5. Run the `androidApp` run configuration for Android, or open `iosApp/iosApp.xcworkspace` in Xcode for iOS.
 
+## 🔒 Premium-only Articles
+
+Some articles are reserved for subscribers. The flag comes from the article feed itself: entries in the pinned [`articles.json`](https://gist.githubusercontent.com/skydoves/f3836488f8d4f1bf3e3c239759d92c0d/raw/1376ef30281e9c9c0322c88281ea09d572b892a4/articles.json) that carry `"premium": true` are premium-only, and entries without the key stay free (`Article.premium` defaults to `false`).
+
+Gating lives in [`ArticleAccess.kt`](core/model/src/commonMain/kotlin/com/revenuecat/catpaywalls/core/model/ArticleAccess.kt) in `core/model`. The pure function `resolveArticleAccess` is evaluated in this order:
+
+1. An active `premium` entitlement opens any article.
+2. A premium article opens the paywall, no matter how many free articles were read today.
+3. Once the free daily quota (3 articles) is used up, the daily-limit paywall is shown.
+4. Otherwise the article opens.
+
+The home grid applies the whole rule. Bookmarks apply only the premium part (`requiresPremiumPaywall`), so a lapsed subscriber tapping a bookmarked premium article sees the paywall. Premium articles show a "Premium" pill on their card, with a lock icon until the user is entitled.
+
+> **Note:** Exit Offers are not available in this sample. purchases-kmp currently only exposes embedded paywall composables such as `Paywall` (there is no `PaywallDialog` or `presentPaywall` equivalent), and [RevenueCat's docs](https://www.revenuecat.com/docs/tools/paywalls/displaying-paywalls) state that exit offers do not work with embedded paywalls. Premium articles therefore open the same paywall route as the daily limit.
+
 ## 🛠 Tech Stack & Open Source Libraries
 
 - Android minimum SDK level 24, iOS 15+.

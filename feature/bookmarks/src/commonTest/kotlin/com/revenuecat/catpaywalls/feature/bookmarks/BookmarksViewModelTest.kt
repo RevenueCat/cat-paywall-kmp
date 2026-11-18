@@ -50,7 +50,7 @@ class BookmarksViewModelTest {
     fakeArticles.setArticlesResult(Result.success(articles))
     val bookmarks = FakeBookmarksRepository()
 
-    val viewModel = BookmarksViewModel(fakeArticles, bookmarks)
+    val viewModel = BookmarksViewModel(fakeArticles, bookmarks, FakePaywallsRepository())
 
     viewModel.uiState.test {
       assertIs<BookmarksUiState.Loading>(awaitItem())
@@ -66,7 +66,7 @@ class BookmarksViewModelTest {
     fakeArticles.setArticlesResult(Result.success(articles))
     val bookmarks = FakeBookmarksRepository(initial = setOf("Test Article 2", "Test Article 4"))
 
-    val viewModel = BookmarksViewModel(fakeArticles, bookmarks)
+    val viewModel = BookmarksViewModel(fakeArticles, bookmarks, FakePaywallsRepository())
 
     viewModel.uiState.test {
       assertIs<BookmarksUiState.Loading>(awaitItem())
@@ -84,7 +84,7 @@ class BookmarksViewModelTest {
     fakeArticles.setArticlesResult(Result.failure(RuntimeException("network down")))
     val bookmarks = FakeBookmarksRepository(initial = setOf("Test Article 1"))
 
-    val viewModel = BookmarksViewModel(fakeArticles, bookmarks)
+    val viewModel = BookmarksViewModel(fakeArticles, bookmarks, FakePaywallsRepository())
 
     viewModel.uiState.test {
       assertIs<BookmarksUiState.Loading>(awaitItem())

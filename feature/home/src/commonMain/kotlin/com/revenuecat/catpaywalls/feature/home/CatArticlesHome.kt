@@ -50,8 +50,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.revenuecat.catpaywalls.core.designsystem.component.CatArticlesAppBar
 import com.revenuecat.catpaywalls.core.designsystem.component.CatArticlesCircularProgress
+import com.revenuecat.catpaywalls.core.designsystem.component.PremiumPill
 import com.revenuecat.catpaywalls.core.designsystem.theme.CatArticlesTheme
 import com.revenuecat.catpaywalls.core.model.Article
+import com.revenuecat.catpaywalls.core.model.ArticleAccess
+import com.revenuecat.catpaywalls.core.model.resolveArticleAccess
 import com.revenuecat.catpaywalls.core.navigation.CatArticlesScreen
 import com.revenuecat.catpaywalls.core.navigation.currentComposeNavigator
 import com.skydoves.landscapist.ImageOptions
@@ -99,11 +102,14 @@ fun CatArticlesHome(viewModel: CatArticlesViewModel) {
       isEntitled = isEntitled,
       todayReadCount = todayReadCount,
       onNavigateToDetails = { article ->
-        if (!isEntitled && todayReadCount >= FREE_DAILY_QUOTA) {
-          composeNavigator.navigate(CatArticlesScreen.Paywalls)
-        } else {
-          composeNavigator.navigate(CatArticlesScreen.CatArticle(articleId = article.id))
+        val destination = when (resolveArticleAccess(article, isEntitled, todayReadCount, FREE_DAILY_QUOTA)) {
+          ArticleAccess.Open -> CatArticlesScreen.CatArticle(articleId = article.id)
+
+          // purchases-kmp only exposes the embedded Paywall, which cannot show exit offers, so premium
+          // articles reuse the existing paywall route instead of a dedicated presentation.
+          ArticleAccess.PremiumPaywall, ArticleAccess.DailyLimitPaywall -> CatArticlesScreen.Paywalls
         }
+        composeNavigator.navigate(destination)
       },
       onToggleBookmark = { title ->
         if (isEntitled) {
@@ -144,6 +150,7 @@ private fun HomeContent(
             items(items = uiState.articles, key = { it.title }) { article ->
               ArticleCard(
                 article = article,
+                isEntitled = isEntitled,
                 isBookmarked = article.title in bookmarkedTitles,
                 onNavigateToDetails = onNavigateToDetails,
                 onToggleBookmark = { onToggleBookmark(article.title) },
@@ -198,6 +205,7 @@ private fun QuotaBanner(todayReadCount: Int) {
 @Composable
 private fun ArticleCard(
   article: Article,
+  isEntitled: Boolean,
   isBookmarked: Boolean,
   onNavigateToDetails: (Article) -> Unit,
   onToggleBookmark: () -> Unit,
@@ -236,6 +244,16 @@ private fun ArticleCard(
       fontSize = 14.sp,
       fontWeight = FontWeight.Bold,
     )
+
+    if (article.premium) {
+      PremiumPill(
+        isLocked = !isEntitled,
+        // The end padding reserves the 48dp bookmark button so a long pill can never cover it.
+        modifier = Modifier
+          .align(Alignment.TopStart)
+          .padding(start = 12.dp, top = 12.dp, end = 48.dp),
+      )
+    }
 
     IconButton(
       modifier = Modifier.align(Alignment.TopEnd),
